@@ -61,6 +61,26 @@ class Utils {
   static vequal (a, b) {
     return this.distanceToSquared(a, b) < 0.00001;
   }
+
+  static scaleEndpoint(a,b,r){
+    let sub = new THREE.Vector3();
+    sub.subVectors(a,b);
+    let len = sub.length();
+    let f = 0.75;
+    if(len>r*2){
+      f = 1-r/len;
+    }
+    let aa = a.clone();
+    a.addVectors( b, sub.multiplyScalar(f));
+    b.addVectors( aa, sub.negate());
+    a.x = this.roundNumber(a.x, 2);
+    a.y = this.roundNumber(a.y, 2);
+    a.z = this.roundNumber(a.z, 2);
+    b.x = this.roundNumber(b.x, 2);
+    b.y = this.roundNumber(b.y, 2);
+    b.z = this.roundNumber(b.z, 2);
+ }
+
 }
 
 export { Utils };

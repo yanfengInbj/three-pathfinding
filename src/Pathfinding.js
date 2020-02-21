@@ -106,12 +106,16 @@ class Pathfinding {
 	 * @param  {number} groupID Current group ID.
 	 * @return {Array<THREE.Vector3>} Array of points defining the path.
 	 */
-	findPath (startPosition, targetPosition, zoneID, groupID) {
+	findPath (startPosition, targetPosition, zoneID, groupID,closestNode=null,farthestNode=null,radius=1.2) {
 		const nodes = this.zones[zoneID].groups[groupID];
 		const vertices = this.zones[zoneID].vertices;
 
-		const closestNode = this.getClosestNode(startPosition, zoneID, groupID, true);
-		const farthestNode = this.getClosestNode(targetPosition, zoneID, groupID, true);
+		if(!closestNode){
+			closestNode = this.getClosestNode(startPosition, zoneID, groupID, true);
+		}
+		if(!farthestNode){
+			farthestNode = this.getClosestNode(targetPosition, zoneID, groupID, true);
+		}
 
 		// If we can't find any node, just go straight to the target
 		if (!closestNode || !farthestNode) {
@@ -137,10 +141,15 @@ class Pathfinding {
 
 			if (nextPolygon) {
 				const portals = getPortalFromTo(polygon, nextPolygon);
-				channel.push(
-					vertices[portals[0]],
-					vertices[portals[1]]
-				);
+				const a = vertices[portals[0]].clone();
+				const b = vertices[portals[1]].clone();
+				Utils.scaleEndpoint(a,b,radius);
+				//console.log("scaleEndpoint",vertices[portals[0]],vertices[portals[1]],a,b);
+				channel.push(a,b);
+				// channel.push(
+				// 	vertices[portals[0]],
+				// 	vertices[portals[1]]
+				// );
 			}
 		}
 		channel.push(targetPosition);
@@ -197,6 +206,63 @@ Pathfinding.prototype.getGroup = (function() {
 		}
 
 		return closestNodeGroup;
+	};
+}());
+
+// yanf
+/**
+ * Returns closest node group ID for given position.
+ * @param  {string} zoneID
+ * @param  {THREE.Vector3} position
+ * @return {number}
+ */
+Pathfinding.prototype.getGroupNode = (function() {
+	const plane = new THREE.Plane();
+	return function (zoneID, position, dist=50) {
+		if (!this.zones[zoneID]) return null;
+
+		const vertices = this.zones[zoneID].vertices;
+		let closeNode = null;
+		let closestNodeGroupId = -1;
+		let distance = Math.pow(dist, 2);
+		const zone = this.zones[zoneID];
+
+		for (let i = 0; i < zone.groups.length; i++) {
+			const group = zone.groups[i];
+			for (const node of group) {
+					plane.setFromCoplanarPoints(
+						vertices[node.vertexIds[0]],
+						vertices[node.vertexIds[1]],
+						vertices[node.vertexIds[2]]
+					);
+					if (Math.abs(plane.distanceToPoint(position)) < 0.01) {
+						const poly = [
+							vertices[node.vertexIds[0]],
+							vertices[node.vertexIds[1]],
+							vertices[node.vertexIds[2]]
+						];
+						if(Utils.isPointInPoly(poly, position)) {
+							return {groupId:i,node,closed:false};
+						}
+					}
+				const measuredDistance = Utils.distanceToSquared(node.centroid, position);
+				if (measuredDistance < distance) {
+					closeNode = node;
+					closestNodeGroupId = i;
+					distance = measuredDistance;
+				}
+			}
+		}
+
+		let closeTriangle = null;
+		if(closeNode){
+			triangle = [
+				vertices[closeNode.vertexIds[0]],
+				vertices[closeNode.vertexIds[1]],
+				vertices[closeNode.vertexIds[2]]
+			];
+		}
+		return {groupId:closestNodeGroupId,node:closeNode,closed:true,closeTriangle};
 	};
 }());
 
