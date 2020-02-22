@@ -102,6 +102,19 @@ class Builder {
       }
     });
 
+    // yanf 查找最多的一个可联通多边形集合
+    let groupMoreIdx = -1;
+    let groupMoreCount = 0;
+    for(let i=0,len=polygonGroups.length;i<len;++i){
+      const cnt = polygonGroups[i].length;
+      if(cnt>groupMoreCount){
+        groupMoreCount = cnt;
+        groupMoreIdx = i;
+      }
+    }
+    if(groupMoreIdx>=0){
+      return [polygonGroups[groupMoreIdx]];
+    }
     return polygonGroups;
   }
 

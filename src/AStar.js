@@ -106,7 +106,9 @@ class AStar {
   }
 
   static heuristic (pos1, pos2) {
-    return Utils.distanceToSquared(pos1, pos2);
+    // 欧式距离改为曼哈顿距离
+    return Math.abs(pos1.x-pos2.x)+Math.abs(pos1.y-pos2.y)+Math.abs(pos1.z-pos2.z);
+    // return Utils.distanceToSquared(pos1, pos2);
   }
 
   static neighbours (graph, node) {

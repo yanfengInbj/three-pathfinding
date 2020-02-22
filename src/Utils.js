@@ -66,7 +66,7 @@ class Utils {
     let sub = new THREE.Vector3();
     sub.subVectors(a,b);
     let len = sub.length();
-    let f = 0.75;
+    let f = 0.6;
     if(len>r*2){
       f = 1-r/len;
     }
